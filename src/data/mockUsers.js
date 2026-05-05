@@ -1,7 +1,7 @@
 export const mockUsers = [
   {
     id: 'USR-001',
-    name: 'Rajesh Kumar',
+    name: 'Ch Hamza',
     email: 'admin@texvision.ai',
     password: 'admin123',
     role: 'administrator',

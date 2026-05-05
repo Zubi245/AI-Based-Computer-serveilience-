@@ -13,7 +13,7 @@ export const mockUsers = [
   },
   {
     id: 'USR-002',
-    name: 'Priya Sharma',
+    name: 'Hamza Arshad',
     email: 'supervisor@texvision.ai',
     password: 'super123',
     role: 'supervisor',

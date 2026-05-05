@@ -25,7 +25,7 @@ export const mockUsers = [
   },
   {
     id: 'USR-003',
-    name: 'Amit Patel',
+    name: 'Hamza',
     email: 'viewer@texvision.ai',
     password: 'view123',
     role: 'viewer',

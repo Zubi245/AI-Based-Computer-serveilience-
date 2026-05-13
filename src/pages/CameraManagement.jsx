@@ -10,8 +10,6 @@ const CameraManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCamera, setEditingCamera] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [editingCamera, setEditingCamera] = useState(null);
 
   useEffect(() => {
     loadCameras();

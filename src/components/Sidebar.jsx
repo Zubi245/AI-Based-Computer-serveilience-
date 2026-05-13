@@ -20,16 +20,21 @@ const Sidebar = () => {
   const user = authService.getCurrentUser();
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Video, label: 'Live Monitoring', path: '/live-monitoring' },
-    { icon: AlertTriangle, label: 'Alerts', path: '/alerts' },
-    { icon: Camera, label: 'Camera Management', path: '/cameras' },
-    { icon: MapPin, label: 'Zone Configuration', path: '/zones' },
-    { icon: FileText, label: 'Event Logs', path: '/event-logs' },
-    { icon: BarChart3, label: 'Reports & Analytics', path: '/reports' },
-    { icon: Users, label: 'User Management', path: '/users', adminOnly: true },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['administrator', 'supervisor', 'viewer'] },
+    { icon: Video, label: 'Live Monitoring', path: '/live-monitoring', roles: ['administrator', 'supervisor', 'viewer'] },
+    { icon: AlertTriangle, label: 'Alerts', path: '/alerts', roles: ['administrator', 'supervisor', 'viewer'] },
+    { icon: Camera, label: 'Camera Management', path: '/cameras', roles: ['administrator', 'supervisor'] },
+    { icon: MapPin, label: 'Zone Configuration', path: '/zones', roles: ['administrator', 'supervisor'] },
+    { icon: FileText, label: 'Event Logs', path: '/event-logs', roles: ['administrator', 'supervisor', 'viewer'] },
+    { icon: BarChart3, label: 'Reports & Analytics', path: '/reports', roles: ['administrator', 'supervisor', 'viewer'] },
+    { icon: Users, label: 'User Management', path: '/users', roles: ['administrator'] },
+    { icon: Settings, label: 'Settings', path: '/settings', roles: ['administrator'] },
   ];
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(user?.role)
+  );
 
   const handleLogout = () => {
     authService.logout();
@@ -59,30 +64,26 @@ const Sidebar = () => {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3">
           <div className="space-y-1">
-            {menuItems.map((item) => {
-              if (item.adminOnly && user?.role !== 'administrator') return null;
-
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                      isActive
-                        ? 'bg-danger/20 text-danger border border-danger/30 shadow-glow-red'
-                        : 'text-gray-400 hover:bg-navy-800/50 hover:text-white'
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <item.icon className={`w-5 h-5 ${isActive ? 'animate-pulse-slow' : ''}`} />
-                      <span className="font-medium">{item.label}</span>
-                    </>
-                  )}
-                </NavLink>
-              );
-            })}
+            {filteredMenuItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-danger/20 text-danger border border-danger/30 shadow-glow-red'
+                      : 'text-gray-400 hover:bg-navy-800/50 hover:text-white'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <item.icon className={`w-5 h-5 ${isActive ? 'animate-pulse-slow' : ''}`} />
+                    <span className="font-medium">{item.label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
           </div>
         </nav>
 

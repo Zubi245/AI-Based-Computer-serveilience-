@@ -75,6 +75,37 @@ const CameraFeedCard = ({ camera, delay = 0 }) => {
           </span>
         </div>
 
+        {/* Detection Badges */}
+        {camera.detectionTypes && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {camera.detectionTypes.smoking && (
+              <span className="px-2 py-1 text-xs bg-danger/20 text-danger border border-danger/30 rounded-full font-medium">
+                🚬 Smoking
+              </span>
+            )}
+            {camera.detectionTypes.sleeping && (
+              <span className="px-2 py-1 text-xs bg-warning/20 text-warning border border-warning/30 rounded-full font-medium">
+                😴 Sleeping
+              </span>
+            )}
+            {camera.detectionTypes.fire && (
+              <span className="px-2 py-1 text-xs bg-danger/20 text-danger border border-danger/30 rounded-full font-medium">
+                🔥 Fire
+              </span>
+            )}
+            {camera.detectionTypes.mobile && (
+              <span className="px-2 py-1 text-xs bg-warning/20 text-warning border border-warning/30 rounded-full font-medium">
+                📱 Mobile
+              </span>
+            )}
+            {camera.detectionTypes.unethical && (
+              <span className="px-2 py-1 text-xs bg-danger/20 text-danger border border-danger/30 rounded-full font-medium">
+                ⚠️ Unethical
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 pt-3 border-t border-navy-700/50">
           <div>

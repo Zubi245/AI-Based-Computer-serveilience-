@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Power, TestTube } from 'lucide-react';
 import { cameraService } from '../services/cameraService';
+import CameraModal from '../components/CameraModal';
 import toast from 'react-hot-toast';
 
 const CameraManagement = () => {
   const [cameras, setCameras] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingCamera, setEditingCamera] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingCamera, setEditingCamera] = useState(null);
 
@@ -24,6 +27,32 @@ const CameraManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveCamera = async (cameraData) => {
+    try {
+      if (editingCamera) {
+        await cameraService.updateCamera(editingCamera.id, cameraData);
+        toast.success('Camera updated successfully');
+      } else {
+        await cameraService.addCamera(cameraData);
+        toast.success('Camera added successfully');
+      }
+      loadCameras();
+      setEditingCamera(null);
+    } catch (error) {
+      toast.error('Failed to save camera');
+    }
+  };
+
+  const handleEdit = (camera) => {
+    setEditingCamera(camera);
+    setShowModal(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingCamera(null);
+    setShowModal(true);
   };
 
   const handleToggleStatus = async (id) => {
@@ -77,7 +106,7 @@ const CameraManagement = () => {
           <p className="text-gray-400">Configure and monitor surveillance cameras</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={handleAddNew}
           className="flex items-center gap-2 px-4 py-2 bg-info/20 hover:bg-info/30 text-info border border-info/30 rounded-lg transition-all"
         >
           <Plus className="w-5 h-5" />
@@ -201,7 +230,7 @@ const CameraManagement = () => {
                           <Power className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => setEditingCamera(camera)}
+                          onClick={() => handleEdit(camera)}
                           className="p-2 hover:bg-info/20 text-info rounded-lg transition-all"
                           title="Edit"
                         >
@@ -223,6 +252,17 @@ const CameraManagement = () => {
           </table>
         </div>
       </motion.div>
+
+      {/* Camera Modal */}
+      <CameraModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditingCamera(null);
+        }}
+        onSave={handleSaveCamera}
+        camera={editingCamera}
+      />
     </div>
   );
 };

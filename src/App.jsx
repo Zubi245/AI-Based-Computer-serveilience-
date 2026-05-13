@@ -11,11 +11,9 @@ import EventLogs from './pages/EventLogs';
 import ReportsAnalytics from './pages/ReportsAnalytics';
 import UserManagement from './pages/UserManagement';
 import Settings from './pages/Settings';
+import Unauthorized from './pages/Unauthorized';
+import ProtectedRoute from './components/ProtectedRoute';
 import { authService } from './services/authService';
-
-const ProtectedRoute = ({ children }) => {
-  return authService.isAuthenticated() ? children : <Navigate to="/login" />;
-};
 
 function App() {
   return (
@@ -46,6 +44,7 @@ function App() {
       
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
         
         <Route
           path="/"
@@ -56,15 +55,37 @@ function App() {
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
+          
+          {/* All authenticated users */}
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="live-monitoring" element={<LiveMonitoring />} />
           <Route path="alerts" element={<AlertsPage />} />
-          <Route path="cameras" element={<CameraManagement />} />
-          <Route path="zones" element={<ZoneConfiguration />} />
           <Route path="event-logs" element={<EventLogs />} />
           <Route path="reports" element={<ReportsAnalytics />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="settings" element={<Settings />} />
+          
+          {/* Admin & Supervisor only */}
+          <Route path="cameras" element={
+            <ProtectedRoute allowedRoles={['administrator', 'supervisor']}>
+              <CameraManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="zones" element={
+            <ProtectedRoute allowedRoles={['administrator', 'supervisor']}>
+              <ZoneConfiguration />
+            </ProtectedRoute>
+          } />
+          
+          {/* Admin only */}
+          <Route path="users" element={
+            <ProtectedRoute allowedRoles={['administrator']}>
+              <UserManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="settings" element={
+            <ProtectedRoute allowedRoles={['administrator']}>
+              <Settings />
+            </ProtectedRoute>
+          } />
         </Route>
         
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

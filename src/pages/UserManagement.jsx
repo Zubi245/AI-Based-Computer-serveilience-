@@ -2,11 +2,19 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Power } from 'lucide-react';
 import { userService } from '../services/userService';
+import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
+import AddUserModal from '../components/AddUserModal';
+import EditUserModal from '../components/EditUserModal';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const currentUser = authService.getCurrentUser();
+  const isAdmin = currentUser?.role === 'administrator';
 
   useEffect(() => {
     loadUsers();
@@ -24,23 +32,77 @@ const UserManagement = () => {
     }
   };
 
+  const handleAddUser = async (userData) => {
+    try {
+      const newUser = await userService.addUser(userData);
+      setUsers(prev => [...prev, newUser]);
+      toast.success('User added successfully');
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error('Error adding user:', error);
+      throw new Error(error.message || 'Failed to add user');
+    }
+  };
+
+  const handleOpenAddModal = () => {
+    if (!isAdmin) {
+      toast.error('Only administrators can add users');
+      return;
+    }
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenEditModal = (user) => {
+    if (!isAdmin) {
+      toast.error('Only administrators can edit users');
+      return;
+    }
+    setSelectedUser(user);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateUser = async (userId, userData) => {
+    try {
+      const updatedUser = await userService.updateUser(userId, userData);
+      setUsers(prev => prev.map(u => u.id === userId ? updatedUser : u));
+      toast.success('User updated successfully');
+      setIsEditModalOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw new Error(error.message || 'Failed to update user');
+    }
+  };
+
   const handleToggleStatus = async (id) => {
+    if (!isAdmin) {
+      toast.error('Only administrators can change user status');
+      return;
+    }
+    
     try {
       await userService.toggleUserStatus(id);
-      toast.success('User status updated');
-      loadUsers();
+      setUsers(prev => prev.map(u => 
+        u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
+      ));
+      toast.success('User status updated successfully');
     } catch (error) {
       toast.error('Failed to update user status');
     }
   };
 
   const handleDelete = async (id) => {
+    if (!isAdmin) {
+      toast.error('Only administrators can delete users');
+      return;
+    }
+    
     if (!confirm('Are you sure you want to delete this user?')) return;
     
     try {
       await userService.deleteUser(id);
-      toast.success('User deleted');
-      loadUsers();
+      setUsers(prev => prev.filter(u => u.id !== id));
+      toast.success('User deleted successfully');
     } catch (error) {
       toast.error('Failed to delete user');
     }
@@ -65,7 +127,16 @@ const UserManagement = () => {
           <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
           <p className="text-gray-400">Manage system users and permissions</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-info/20 hover:bg-info/30 text-info border border-info/30 rounded-lg transition-all">
+        <button 
+          onClick={handleOpenAddModal}
+          disabled={!isAdmin}
+          className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-all ${
+            isAdmin 
+              ? 'bg-info/20 hover:bg-info/30 text-info border-info/30 cursor-pointer' 
+              : 'bg-gray-600/20 text-gray-500 border-gray-600/30 cursor-not-allowed opacity-50'
+          }`}
+          title={!isAdmin ? 'Only administrators can add users' : 'Add new user'}
+        >
           <Plus className="w-5 h-5" />
           Add User
         </button>
@@ -132,6 +203,7 @@ const UserManagement = () => {
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-300">Email</th>
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-300">Role</th>
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-300">Status</th>
+                <th className="px-6 py-4 text-left text-sm font-bold text-gray-300">Created Date</th>
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-300">Last Login</th>
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-300">Actions</th>
               </tr>
@@ -140,7 +212,7 @@ const UserManagement = () => {
               {loading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
-                    <td colSpan="7" className="px-6 py-4">
+                    <td colSpan="8" className="px-6 py-4">
                       <div className="h-8 bg-navy-800/50 rounded animate-pulse" />
                     </td>
                   </tr>
@@ -162,24 +234,46 @@ const UserManagement = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-400">
+                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-400">
                       {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleToggleStatus(user.id)}
-                          className="p-2 hover:bg-warning/20 text-warning rounded-lg transition-all"
-                          title="Toggle Status"
+                          disabled={!isAdmin}
+                          className={`p-2 rounded-lg transition-all ${
+                            isAdmin 
+                              ? 'hover:bg-warning/20 text-warning cursor-pointer' 
+                              : 'text-gray-600 cursor-not-allowed opacity-50'
+                          }`}
+                          title={isAdmin ? 'Toggle Status' : 'Admin only'}
                         >
                           <Power className="w-4 h-4" />
                         </button>
-                        <button className="p-2 hover:bg-info/20 text-info rounded-lg transition-all" title="Edit">
+                        <button 
+                          onClick={() => handleOpenEditModal(user)}
+                          disabled={!isAdmin}
+                          className={`p-2 rounded-lg transition-all ${
+                            isAdmin 
+                              ? 'hover:bg-info/20 text-info cursor-pointer' 
+                              : 'text-gray-600 cursor-not-allowed opacity-50'
+                          }`}
+                          title={isAdmin ? 'Edit User' : 'Admin only'}
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="p-2 hover:bg-danger/20 text-danger rounded-lg transition-all"
-                          title="Delete"
+                          disabled={!isAdmin}
+                          className={`p-2 rounded-lg transition-all ${
+                            isAdmin 
+                              ? 'hover:bg-danger/20 text-danger cursor-pointer' 
+                              : 'text-gray-600 cursor-not-allowed opacity-50'
+                          }`}
+                          title={isAdmin ? 'Delete User' : 'Admin only'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -192,6 +286,26 @@ const UserManagement = () => {
           </table>
         </div>
       </motion.div>
+
+      {/* Add User Modal */}
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onUserAdded={handleAddUser}
+        existingEmails={users.map(u => u.email.toLowerCase())}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onUserUpdated={handleUpdateUser}
+        user={selectedUser}
+        existingEmails={users.map(u => u.email.toLowerCase())}
+      />
     </div>
   );
 };

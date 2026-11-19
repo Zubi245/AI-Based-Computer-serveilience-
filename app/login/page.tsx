@@ -4,9 +4,8 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, Mail, AlertTriangle, Check, ChevronRight } from 'lucide-react'
+import { Lock, Mail, AlertTriangle } from 'lucide-react'
 import { authService } from '@/services/authService'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,7 +23,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
-  const router = useRouter()
 
   const {
     register,
@@ -45,7 +43,9 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem('texvision_remember_me')
       }
-      router.push('/dashboard')
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard'
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Invalid credentials or inactive account')
     } finally {
@@ -54,11 +54,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-900 to-navy-950">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-navy-900 to-navy-950 overflow-hidden">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md p-8"
+        className="w-full max-w-md p-4 md:p-8"
       >
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-danger to-danger-dark rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow-red">

@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Shield, Clock, Save, Edit, Lock, ChevronRight } from 'lucide-react';
 import { authService } from '@/services/authService';
-import { useRouter } from 'next/router';
 import LoadingButton from '@/components/LoadingButton';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,7 +33,6 @@ export default function ProfilePage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const user = authService.getCurrentUser();
-  const router = useRouter();
 
   const {
     register,
@@ -85,7 +83,9 @@ export default function ProfilePage() {
   };
 
   if (!user) {
-    router.push('/login');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
     return null;
   }
 
@@ -96,7 +96,7 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold text-white mb-2">User Profile</h1>
           <p className="text-gray-400">Manage your account settings</p>
         </div>
-        <LoadingButton onClick={() => router.push('/dashboard')}>
+        <LoadingButton onClick={() => { if (typeof window !== 'undefined') window.location.href = '/dashboard' }}>
           <User className="w-4 h-4 mr-2" />
           Back to Dashboard
         </LoadingButton>

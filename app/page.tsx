@@ -1,19 +1,22 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { authService } from '@/services/authService';
+export const dynamic = 'force-dynamic'
+
+import { useEffect } from 'react'
+import { authService } from '@/services/authService'
 
 export default function Home() {
-  const router = useRouter();
-
   useEffect(() => {
     if (authService.isAuthenticated()) {
-      router.push('/dashboard');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard'
+      }
     } else {
-      router.push('/login');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
     }
-  }, [router]);
+  }, [])
 
-  return null;
+  return null
 }

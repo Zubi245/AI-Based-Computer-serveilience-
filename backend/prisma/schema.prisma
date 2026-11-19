@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("viewer")
+  status    String   @default("active")
+  permissions String   @default("[]")
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cameras     Camera[]
+  zones       Zone[]
+  alerts      Alert[]
+  eventLogs   EventLog[]
+  acknowledgedAlerts Alert[] @relation("AcknowledgedBy")
+  resolvedAlerts     Alert[] @relation("ResolvedBy")
+}
+
+model Camera {
+  id          String   @id @default(uuid())
+  name        String
+  zoneName    String   @default("Unassigned")
+  rtspUrl     String
+  status      String   @default("active")
+  lastActive  DateTime?
+  resolution  String   @default("1920x1080")
+  fps         Int      @default(30)
+  health      Int      @default(100)
+  locationX   Int?
+  locationY   Int?
+  detectionTypes String   @default("{}")
+  zoneId      String?
+  zone        Zone?    @relation(fields: [zoneId], references: [id])
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  alerts      Alert[]
+  eventLogs   EventLog[]
+}
+
+model Zone {
+  id              String   @id @default(uuid())
+  name            String
+  type            String   @default("Machine Floor")
+  riskLevel       String   @default("medium")
+  area            Int?
+  capacity        Int?
+  currentOccupancy Int    @default(0)
+  status          String   @default("active")
+  detectionRules String   @default("[]")
+  cameras         Camera[]
+  createdById     String?
+  createdBy       User?    @relation(fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  alerts          Alert[]
+  eventLogs       EventLog[]
+}
+
+model Alert {
+  id              String   @id @default(uuid())
+  timestamp       DateTime @default(now())
+  cameraId        String
+  camera          Camera   @relation(fields: [cameraId], references: [id])
+  zoneId          String?
+  zone            Zone?    @relation(fields: [zoneId], references: [id])
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  violationType   String
+  violationLabel  String
+  severity        String
+  confidence      Float
+  status          String   @default("active")
+  snapshot        String?
+  acknowledged    Boolean  @default(false)
+  acknowledgedBy  String?
+  acknowledgedAt  DateTime?
+  resolvedBy      String?
+  resolvedAt      DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  acknowledgedByUser User? @relation("AcknowledgedBy", fields: [acknowledgedBy], references: [id])
+  resolvedByUser     User? @relation("ResolvedBy", fields: [resolvedBy], references: [id])
+}
+
+model EventLog {
+  id          String   @id @default(uuid())
+  timestamp   DateTime @default(now())
+  cameraId    String?
+  camera      Camera?  @relation(fields: [cameraId], references: [id])
+  zoneId      String?
+  zone        Zone?    @relation(fields: [zoneId], references: [id])
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  eventType   String
+  description String
+  severity    String
+  createdAt   DateTime @default(now())
+}
